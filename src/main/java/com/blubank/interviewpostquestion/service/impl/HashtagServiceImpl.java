@@ -6,13 +6,12 @@ import com.blubank.interviewpostquestion.repository.HashtagRepository;
 import com.blubank.interviewpostquestion.service.HashtagService;
 import com.blubank.interviewpostquestion.service.api.hashtag.HashtagModel;
 import com.blubank.interviewpostquestion.service.api.hashtag.HashtagRankModel;
+import com.blubank.interviewpostquestion.util.Clock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.sql.Timestamp;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,14 +19,22 @@ import java.util.stream.Collectors;
 @Service
 public class HashtagServiceImpl implements HashtagService {
 
+    private final int TOP_TRENDS_RESULT_LIMIT = 10;
+
+    private final int TOP_TRENDS_RECENT_DAYS = 7;
+
     private final Pattern HASHTAG_PATTERN = Pattern.compile("#\\w+");
 
     @Autowired
     private HashtagRepository hashtagRepository;
 
+    @Autowired
+    private Clock clock;
+
+
     @Override
     public HashtagModel findByHashtag(String hashtag) {
-        Optional<HashtagEntity> optionalHashtagEntity = hashtagRepository.findByHashtag(hashtag);
+        Optional<HashtagEntity> optionalHashtagEntity = hashtagRepository.findByHashtag(hashtag.toLowerCase(Locale.ROOT));
         if (optionalHashtagEntity.isEmpty())
             return null;
 
@@ -41,7 +48,22 @@ public class HashtagServiceImpl implements HashtagService {
 
     @Override
     public List<HashtagRankModel> topTrends(int resultLimit, int recentDays) {
-        return null;
+        Timestamp recentDaysTimestamp = clock.getRecentDaysTimestamp(recentDays);
+
+        return hashtagRepository.findTopTrends(resultLimit, recentDaysTimestamp)
+                .stream()
+                .map(item -> new HashtagRankModel(item.getHashtag(), item.getCount()))
+                .toList();
+    }
+
+    @Override
+    public List<HashtagRankModel> topTrends() {
+        Timestamp recentDaysTimestamp = clock.getRecentDaysTimestamp(TOP_TRENDS_RECENT_DAYS);
+
+        return hashtagRepository.findTopTrends(TOP_TRENDS_RESULT_LIMIT, recentDaysTimestamp)
+                .stream()
+                .map(item -> new HashtagRankModel(item.getHashtag(), item.getCount()))
+                .toList();
     }
 
     @Override
@@ -52,13 +74,18 @@ public class HashtagServiceImpl implements HashtagService {
 
         Set<HashtagEntity> hashtagEntitySet = new HashSet<>();
         for (String hashtag : hashtagSet) {
-            HashtagEntity hashtagEntity = new HashtagEntity();
-            hashtagEntity.setHashtag(hashtag);
-            hashtagEntitySet.add(hashtagEntity);
+            Optional<HashtagEntity> optionalHashtagEntity = hashtagRepository.findByHashtag(hashtag.toLowerCase(Locale.ROOT));
+            if (optionalHashtagEntity.isPresent()) {
+                hashtagEntitySet.add(optionalHashtagEntity.get());
+            } else {
+                HashtagEntity hashtagEntity = new HashtagEntity();
+                hashtagEntity.setHashtag(hashtag.toLowerCase(Locale.ROOT));
+                hashtagEntitySet.add(hashtagEntity);
+                hashtagRepository.save(hashtagEntity);
+            }
         }
 
-        List<HashtagEntity> hashtagEntityList = (List<HashtagEntity>) hashtagRepository.saveAll(hashtagEntitySet);
-        return new HashSet<>(hashtagEntityList);
+        return hashtagEntitySet;
     }
 
 

@@ -17,12 +17,7 @@ public class HashtagEntity extends ABaseEntity {
     @Column(unique = true)
     private String hashtag;
 
-    @ManyToMany
-    @JoinTable(
-            name = "hashtags_tweets",
-            joinColumns = @JoinColumn(name = "hashtag_id"),
-            inverseJoinColumns = @JoinColumn(name = "tweet_id")
-    )
+    @ManyToMany(mappedBy = "hashtags", fetch = FetchType.EAGER)
     private Set<TweetEntity> tweets = new HashSet<>();
 
 

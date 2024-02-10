@@ -6,8 +6,10 @@ import com.blubank.interviewpostquestion.service.TweetService;
 import com.blubank.interviewpostquestion.service.api.tweet.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -22,6 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ActiveProfiles("test")
 @WebMvcTest(TweetRestController.class)
+//@EnableJpaRepositories(basePackages = "com.blubank.interviewpostquestion.repository")
+//@EntityScan(basePackages = "com.blubank.interviewpostquestion.entity")
 public class TweetRestControllerTest extends AbstractRestControllerTest {
 
 	@MockBean

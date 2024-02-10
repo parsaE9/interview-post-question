@@ -1,9 +1,6 @@
 package com.blubank.interviewpostquestion.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +19,12 @@ public class TweetEntity extends ABaseEntity {
 
     private Set<String> likes = new HashSet<>();
 
-    @ManyToMany(mappedBy = "tweets", fetch = FetchType.EAGER)
+    @ManyToMany
+    @JoinTable(
+            name = "tweets_hashtags",
+            joinColumns = @JoinColumn(name = "tweet_id"),
+            inverseJoinColumns = @JoinColumn(name = "hashtag_id")
+    )
     private Set<HashtagEntity> hashtags = new HashSet<>();
 
 
